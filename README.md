@@ -1,6 +1,6 @@
-# Post1 : 고객생애가치 분석  
-최초 작성일 : 2023-12-10  
-마지막 수정일 : 2023-12-13
+# 하이퍼파라미터 튜닝 : LSTM 모델  
+최초 작성일 : 2024-01-06  
+마지막 수정일 : 2024-01-06
   
 ## 0. Overview
 시계열 데이터를 예측하는 LSTM 모델을 구축하고, DataBase(Mysql)을 이용해서, 하이퍼파라미터 튜닝을 시도하였다.
@@ -42,15 +42,3 @@ LSTM(Long Short-Term Memory)는 순환 신경망(RNN, Recurrent Neural Network)�
 $$\hat{h} = \arg\min_{h}\sum_{i \leq n} \left[ \text{Actual Data}(i) - \text{Predicted Data}(i)(h) \right]^2$$
 
 
-
-## 2. Dataset
-분석을 위해 활용한 데이터는 2개의 csv파일로 이루어져 있으며, 고객(회원정보)가 포함되어 있는 'Customer info.csv'파일은 '541910 X 7'의 크기로 다음과 같은 컬럼을 갖는다.
-|Name|Type|Description|
-|:--:|:--:|:--:|
-|CustomerID|String|고객 ID|
-|CustomerName|String|고객 이름|
-|CustomerAge|Integer|고객 나이|
-|CustomerGender|String|고객 성별|
-|CustomerPhoneNumber|String|고객 전화번호|
-|CustomerEmail|String|고객 이메일|
-|CustomerAddress|String|고객 주소|
