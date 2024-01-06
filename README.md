@@ -22,7 +22,7 @@ LSTM(Long Short-Term Memory)는 순환 신경망(RNN, Recurrent Neural Network)�
 4. 실행 수행 및 평가
 5. 최적의 하이퍼 파라미터 선택 및 최종 학습 모델
 
-하이퍼파라미터 정의는 어떤 하이퍼 파라미터를 최적화 시킬 것인지에 대해 정의하는 단계이다. 대표적인 하이퍼파라미터로는 학습률(learning rate), 배치 크기(batch size), 은닉층 크기(size of hidden layer), 규제화 매개변수(penalty parameter) 등이 있다. 본 실험에서는 에포크(Epoch), 학습률(learning rate), 학습 데이터 비율(ratio of train set), LSTM 모델 내 window 크기(size of sequence), 입력층 크기(size of input), 은닉층 크기(size of hidden), 출력층 크기(size of output)으로 정의하였다.
+하이퍼파라미터 정의는 어떤 하이퍼 파라미터를 최적화 시킬 것인지에 대해 정의하는 단계이다. 대표적인 하이퍼파라미터로는 학습률(learning rate), 배치 크기(batch size), 은닉층 크기(size of hidden layer), 규제화 매개변수(penalty parameter) 등이 있다. 본 실험에서는 에포크(Epoch), 배치 크기(Batch size), 학습률(learning rate), 학습 데이터 비율(ratio of train set), LSTM 모델 내 window 크기(size of sequence), 입력층 크기(size of input), 은닉층 크기(size of hidden), 출력층 크기(size of output)으로 정의하였다.
 
 탐색 공간 정의는 각 하이퍼 파라미터에 대한 탐색 범위를 정의하는 단계이다. 본 실험에서는 다음과 같이 탐색 범위를 정의했으며, 실험은 각 하이퍼 파라미터의 순서쌍(Catesian product)에 대해서 수행 및 평가가 이루어진다.
 |Name|Search Space Size|Value|
@@ -43,25 +43,82 @@ LSTM(Long Short-Term Memory)는 순환 신경망(RNN, Recurrent Neural Network)�
 $$\hat{h} = \arg\min_{h}\sum_{i \leq n} \left[ \text{Actual Data}(i) - \text{Predicted Data}(i)(h) \right]^2$$
 
 ## 2. DataBase
-본 실험에서 하이퍼파라미터 튜닝을 자둥화하기 위해 Mysql DataBase를 사용했으며, 총 5개의 테이블을 정의하였다. 각 테이블의 정의과 스펙은 아래 표와 같다.
-|Name|Description|
-|:--:|:--:|
-|TB_ASSETVALUE_RAW|원천(source)로부터 입수된 시계열 데이터를 저장하는 테이블|
-|TB_ASSETVALUE_ADJ|전처리 후 학습에 활용하는 시계열 데이터를 저장하는 테이블|
-|TB_HYPERPARAMTER|탐색하고자 하는 하이퍼파라미터 순서쌍을 저장하는 테이블|
-|TB_MODELRESULT|모델 학습 후, 결과물을 저장하는 테이블|
-|TB_TASKSTATUS|작업 진행 상황을 모니터링하기 위한 테이블|
+본 실험에서 하이퍼파라미터 튜닝을 자둥화하기 위해 Mysql DataBase를 사용했으며, 총 5개의 테이블을 정의하였다. 모든 테이블에는 공통적으로 DATE_UPDATE 필드가 존재하며, 데이터가 언제 삽입(insert), 업데이터(update)가 되었는지 시스템 시간이 기록된다. 시계열 데이터(주식, 금리, 환율 등)는 티커(Ticker)를 통해 고유성을 나타내고, 하이퍼파라미터 순서쌍은 작업 코드(code_task)에 의해 고유성이 보장된다. 테이블 TB_ASSETVALUE_RAW, TB_ASSETVALUE_ADJ, TB_HYPERPARAMETER, TB_MODELRESULT는 시계열 데이터, 하이퍼 파라미터, 모델 결과값이 저장되지만, 테이블 TB_TASKSTATUS는 모델에 관한 데이터가 적재되는 것이 아닌 작업을 관리하고, 진행도를 모니터링하는 용도로 설계된 테이블이다. 각 테이블의 정의과 스펙은 아래 표와 같다.
+
+1. TB_ASSETVALUE_RAW  
+원천(source)로부터 입수된 시계열 데이터를 저장하는 테이블
+
+|Field|Type|Null|Key|Description|
+|:--:|:--:|:--:|:--:|:--:|
+|DATE_MARKET|varchar(20)|NO|PRI|시장 기준일|
+|TICKER|varchar(20)|NO|PRI|티커|
+|OPEN_P|float|YES||시가|
+|HIGH_P|float|YES||고가|
+|LOW_P|float|YES||저가|
+|CLOSE_P|float|YES||종가|
+|VOLUME|float|YES||거래량|
+|DATE_UPDATE|datetime|YES||데이터 업데이트 일시|
+
+2. TB_ASSETVALUE_ADJ
+전처리 후 학습에 활용하는 시계열 데이터를 저장하는 테이블
+
+|Field|Type|Null|Key|Description|
+|:--:|:--:|:--:|:--:|:--:|
+|DATE_MARKET|varchar(20)|NO|PRI|시장 기준일|
+|TICKER|varchar(20)|NO|PRI|티커|
+|OPEN_P|float|YES||시가|
+|HIGH_P|float|YES||고가|
+|LOW_P|float|YES||저가|
+|CLOSE_P|float|YES||종가|
+|VOLUME|float|YES||거래량|
+|DATE_UPDATE|datetime|YES||데이터 업데이트 일시|
+
+3. TB_HYPERPARAMETER
+탐색하고자 하는 하이퍼파라미터 순서쌍을 저장하는 테이블
+
+|Field|Type|Null|Key|Description|
+|:--:|:--:|:--:|:--:|:--:|
+|CODE_TASK|varchar(20)|NO|PRI|작업 코드|
+|EPOCH|int|YES||에포크|
+|BATCH_SIZE|int|YES||배치 크기|
+|LEARNING_RATE|float|YES||학습률|
+|RATIO_TRAIN_SET|float|YES||학습 데이터 비율|
+|SIZE_SEQUENCE|int|YES||LSTM 모댈 내 window 크기|
+|SIZE_UNIT_INPUT|int|YES||입력층 크기|
+|SIZE_UNIT_HIDDEN|int|YES||은닉층 크기|
+|SIZE_UNIT_OUTPUT|int|YES||출력층 크기|
+|DATE_UPDATE|datetime|YES||데이터 업데이트 일시|
+
+4. TB_MODELRESULT
+모델 학습 후, 결과물을 저장하는 테이블
+
+|Field|Type|Null|Key|Description|
+|:--:|:--:|:--:|:--:|:--:|
+|CODE_TASK|varchar(20)|NO|PRI|작업 코드|
+|TICKER|varchar(20)|YES||티커|
+|VERSION_MODEL|int|YES||모델 버전|
+|DATE_B_TRAIN|varchar(20)|YES||Train set의 시작일(YYYYMMDD)|
+|DATE_E_TRAIN|varchar(20)|YES||Train set의 종료일(YYYYMMDD)|
+|DATE_B_TEST|varchar(20)|YES||Test set의 시작일(YYYYMMDD)|
+|DATE_E_TEST|varchar(20)|YES||Test set의 종료일(YYYYMMDD)|
+|LOSS|float|YES||손실|
+|ACCURACY|float|YES||정확도|
+|MSE|float|YES||평균제곱오차(Mean Square Error)|
+|DATE_UPDATE|datetime|YES||데이터 업데이트 일시|
 
 
 
-|Name|Search Space Size|Value|
-|:--:|:--:|:--:|
-|Epoch|2|20, 30|
-|Batch Size|2|10, 20|
-|Learning Rate|2|0.001, 0.005|
-|Ratio of train set|2|0.9, 0.8|
-|size of sequence|1|50|
-|size of input|2|50, 64|
-|size of hidden|2|64, 128|
-|size of output|1|1|
+5. TB_TASKSTATUS
+작업 진행 상황을 모니터링하기 위한 테이블
+
+|Field|Type|Null|Key|Description|
+|:--:|:--:|:--:|:--:|:--:|
+|CODE_TASK|varchar(20)|NO|PRI|작업 코드|
+|TICKER|varchar(20)|YES||티커(데이터 코드)|
+|IDX_TASK|int|YES||작업 인덱스|
+|STATUS|varchar(20)|YES||상태값|
+|NOTE|varchar(300)|YES||에러 내용|
+|DATE_UPDATE|datetime|YES||데이터 업데이트 일시|
+   
+
 ![dataflow](./images/dataflow.png)
