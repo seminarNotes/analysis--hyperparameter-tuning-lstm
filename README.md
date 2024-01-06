@@ -7,6 +7,7 @@
 
 ## Table of Contents
 1. [Introduction](#1.-Introduction)
+2. [DataBase](#2.-DataBase)
 
 
 ## 1. Introduction 
@@ -29,7 +30,7 @@ LSTM(Long Short-Term Memory)는 순환 신경망(RNN, Recurrent Neural Network)�
 |Epoch|2|20, 30|
 |Batch Size|2|10, 20|
 |Learning Rate|2|0.001, 0.005|
-|Ratio of train set|2|0.9, 0.8|
+|Ratio of train set|2|0.8, 0.9|
 |size of sequence|1|50|
 |size of input|2|50, 64|
 |size of hidden|2|64, 128|
@@ -41,4 +42,26 @@ LSTM(Long Short-Term Memory)는 순환 신경망(RNN, Recurrent Neural Network)�
 
 $$\hat{h} = \arg\min_{h}\sum_{i \leq n} \left[ \text{Actual Data}(i) - \text{Predicted Data}(i)(h) \right]^2$$
 
+## 2. DataBase
+본 실험에서 하이퍼파라미터 튜닝을 자둥화하기 위해 Mysql DataBase를 사용했으며, 총 5개의 테이블을 정의하였다. 각 테이블의 정의과 스펙은 아래 표와 같다.
+|Name|Description|
+|:--:|:--:|
+|TB_ASSETVALUE_RAW|원천(source)로부터 입수된 시계열 데이터를 저장하는 테이블|
+|TB_ASSETVALUE_ADJ|전처리 후 학습에 활용하는 시계열 데이터를 저장하는 테이블|
+|TB_HYPERPARAMTER|탐색하고자 하는 하이퍼파라미터 순서쌍을 저장하는 테이블|
+|TB_MODELRESULT|모델 학습 후, 결과물을 저장하는 테이블|
+|TB_TASKSTATUS|작업 진행 상황을 모니터링하기 위한 테이블|
 
+
+
+|Name|Search Space Size|Value|
+|:--:|:--:|:--:|
+|Epoch|2|20, 30|
+|Batch Size|2|10, 20|
+|Learning Rate|2|0.001, 0.005|
+|Ratio of train set|2|0.9, 0.8|
+|size of sequence|1|50|
+|size of input|2|50, 64|
+|size of hidden|2|64, 128|
+|size of output|1|1|
+![dataflow](./images/dataflow.png)
