@@ -59,7 +59,7 @@ $$\hat{h} = \arg\min_{h}\sum_{i \leq n} \left[ \text{Actual Data}(i) - \text{Pre
 |VOLUME|float|YES||거래량|
 |DATE_UPDATE|datetime|YES||데이터 업데이트 일시|
 
-2. TB_ASSETVALUE_ADJ
+2. TB_ASSETVALUE_ADJ  
 전처리 후 학습에 활용하는 시계열 데이터를 저장하는 테이블
 
 |Field|Type|Null|Key|Description|
@@ -73,7 +73,7 @@ $$\hat{h} = \arg\min_{h}\sum_{i \leq n} \left[ \text{Actual Data}(i) - \text{Pre
 |VOLUME|float|YES||거래량|
 |DATE_UPDATE|datetime|YES||데이터 업데이트 일시|
 
-3. TB_HYPERPARAMETER
+3. TB_HYPERPARAMETER  
 탐색하고자 하는 하이퍼파라미터 순서쌍을 저장하는 테이블
 
 |Field|Type|Null|Key|Description|
@@ -89,7 +89,7 @@ $$\hat{h} = \arg\min_{h}\sum_{i \leq n} \left[ \text{Actual Data}(i) - \text{Pre
 |SIZE_UNIT_OUTPUT|int|YES||출력층 크기|
 |DATE_UPDATE|datetime|YES||데이터 업데이트 일시|
 
-4. TB_MODELRESULT
+4. TB_MODELRESULT  
 모델 학습 후, 결과물을 저장하는 테이블
 
 |Field|Type|Null|Key|Description|
@@ -106,9 +106,7 @@ $$\hat{h} = \arg\min_{h}\sum_{i \leq n} \left[ \text{Actual Data}(i) - \text{Pre
 |MSE|float|YES||평균제곱오차(Mean Square Error)|
 |DATE_UPDATE|datetime|YES||데이터 업데이트 일시|
 
-
-
-5. TB_TASKSTATUS
+5. TB_TASKSTATUS  
 작업 진행 상황을 모니터링하기 위한 테이블
 
 |Field|Type|Null|Key|Description|
@@ -120,5 +118,5 @@ $$\hat{h} = \arg\min_{h}\sum_{i \leq n} \left[ \text{Actual Data}(i) - \text{Pre
 |NOTE|varchar(300)|YES||에러 내용|
 |DATE_UPDATE|datetime|YES||데이터 업데이트 일시|
    
-
+위 테이블을 이용하여, 실험의 데이터 흐름(Dataflow)를 나타내면 아래 흐름도와 같다.
 ![dataflow](./images/dataflow.png)
