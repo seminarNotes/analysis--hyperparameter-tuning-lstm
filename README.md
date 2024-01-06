@@ -7,8 +7,8 @@
 
 ## Table of Contents
 1. [Introduction](#1.-Introduction)
-2. [DataBase](#2.-DataBase)
-
+2. [DataFlow](#2.-DataFlow)
+3. [WorkFlow](#3.-WorkFlow)
 
 ## 1. Introduction 
 
@@ -42,7 +42,7 @@ LSTM(Long Short-Term Memory)는 순환 신경망(RNN, Recurrent Neural Network)�
 
 $$\hat{h} = \arg\min_{h}\sum_{i \leq n} \left[ \text{Actual Data}(i) - \text{Predicted Data}(i)(h) \right]^2$$
 
-## 2. DataBase
+## 2. Dataflow
 본 실험에서 하이퍼파라미터 튜닝을 자둥화하기 위해 Mysql DataBase를 사용했으며, 총 5개의 테이블을 정의하였다. 모든 테이블에는 공통적으로 DATE_UPDATE 필드가 존재하며, 데이터가 언제 삽입(insert), 업데이터(update)가 되었는지 시스템 시간이 기록된다. 시계열 데이터(주식, 금리, 환율 등)는 티커(Ticker)를 통해 고유성을 나타내고, 하이퍼파라미터 순서쌍은 작업 코드(code_task)에 의해 고유성이 보장된다. 테이블 TB_ASSETVALUE_RAW, TB_ASSETVALUE_ADJ, TB_HYPERPARAMETER, TB_MODELRESULT는 시계열 데이터, 하이퍼 파라미터, 모델 결과값이 저장되지만, 테이블 TB_TASKSTATUS는 모델에 관한 데이터가 적재되는 것이 아닌 작업을 관리하고, 진행도를 모니터링하는 용도로 설계된 테이블이다. 각 테이블의 정의과 스펙은 아래 표와 같다.
 
 1. TB_ASSETVALUE_RAW  
@@ -120,3 +120,36 @@ $$\hat{h} = \arg\min_{h}\sum_{i \leq n} \left[ \text{Actual Data}(i) - \text{Pre
    
 위 테이블을 이용하여, 실험의 데이터 흐름(Dataflow)를 나타내면 아래 흐름도와 같다.
 ![dataflow](./images/dataflow.png)
+
+## 3. Workflow 
+
+실험을 수행하기 위해 처음 시계열과 어느 기간의 데이터를 사용할 것인지 선택해서 입력해야한다. 예를 들어, 환율에 대한 예측을 하기 위해 USE/KRW 티커를 사용하고, 데이터의 시작일과 종류일을 아아래와 같이 가정한다. 
+```python
+ticker = 'AAPL'
+date_begin = '2013-01-01'
+date_end = '209-12-31'
+```
+    
+```python
+list_table = ['TB_ASSETVALUE_RAW',
+                'TB_ASSETVALUE_ADJ',
+                'TB_HYPERPARAMETER',
+                'TB_MODELRESULT',
+                'TB_TASKSTATUS']
+    
+for table in list_table :
+    if check_table(table) :
+        print ('Table %s already exists.' %table)
+    else : 
+        try :
+            create_table(table)
+            print ('Table %s created.' %table)
+        except Exception as e :
+            print ('[ERROR] %s' %str(e))
+
+initiate_table_hyperparameter()
+
+initiate_table_taskstatus(ticker)
+
+update_taskstatus('SETTING_DBTABLE', ticker, 'Completed', None)
+```
