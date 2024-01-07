@@ -156,8 +156,7 @@ initiate_table_taskstatus(ticker)
 update_taskstatus('SETTING_DBTABLE', ticker, 'Completed', None)
 ```
 
-task_main.py 파일에서는 
-
+task_main.py 파일을 실행하면, '원천(source)로부터 데이터 입수', '입수된 데이터를 전처리', '하이퍼파라미터/시계열 데이터 조회', '실행 수행 및 평가', '결과값 저장'이 순서대로 실행되면, 각 단계가 완료될 때마다 완료 flag를 테이블 TB_TASKSTATUS에 기록(함수 'update_taskstatus')한다. try 구문과 재시도 횟수(retry_count) 30회, 재시도 간 대기 시간(retry_sleep) 5초를 활용해서 작업 간 에러가 발생하면, 해당 작업이 재시도될 수 있도록 구성했으며, 에러 발생 시, 에러에 대한 내용은 테이블 TB_TASKSTATUS에 저장된다.
 ``` python
 
 ticker = 'USD/KRW'
