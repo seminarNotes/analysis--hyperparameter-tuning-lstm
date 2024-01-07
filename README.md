@@ -123,12 +123,14 @@ $$\hat{h} = \arg\min_{h}\sum_{i \leq n} \left[ \text{Actual Data}(i) - \text{Pre
 
 ## 3. Workflow 
 
-실험을 수행하기 위해 처음 시계열과 어느 기간의 데이터를 사용할 것인지 선택해서 입력해야한다. 예를 들어, 환율에 대한 예측을 하기 위해 USE/KRW 티커를 사용하고, 데이터의 시작일과 종류일을 아아래와 같이 가정한다. 
+실험을 수행하기 위해 처음 시계열과 어느 기간의 데이터를 사용할 것인지 선택해서 입력해야한다. 예를 들어, 원화(KRW)에 대한 달러(USD) 환율을 예측 하기 위해 'USD/KRW' 티커를 사용하고, 데이터의 시작일을 '2013-01-01'과 종류일을 '2022-12-31'로 정의한다.
 ```python
-ticker = 'AAPL'
+ticker = 'USD/KRW'
 date_begin = '2013-01-01'
-date_end = '209-12-31'
+date_end = '2022-12-31'
 ```
+
+작업에 필요한 데이터베이스 테이블을 생성하고, 필요한 값을 입력하기 위해 task_utils.py를 실행한다. 필요한 테이블이 존재하는지 확인(함수 'check_table')하고, 존재하지 않을 경우, 테이블을 생성(함수 'create_table')한다. 이 후, 정의한 하이퍼파라미터의 탐색공간에 대한 값을 테이블에 입력(함수 'initiate_table_hyperparameter')에 입력하고, 작업 진행 상황을 모니터링하기 위해 수행하고자 하는 작업 리스트를 세팅(함수 'initiate_table_taskstatus')한다. 모든 작업이 수행되면, 세팅에 대한 완료 flag를 테이블 TB_TASKSTATUS에 기록(함수 'update_taskstatus('SETTING_DBTABLE', ticker, 'Completed', None)')한다.
     
 ```python
 list_table = ['TB_ASSETVALUE_RAW',
