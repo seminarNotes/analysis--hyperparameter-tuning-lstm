@@ -155,3 +155,96 @@ initiate_table_taskstatus(ticker)
 
 update_taskstatus('SETTING_DBTABLE', ticker, 'Completed', None)
 ```
+
+task_main.py 파일에서는 
+
+``` python
+
+ticker = 'USD/KRW'
+date_begin = '2013-01-01'
+date_end = '2022-12-31'
+retry_count = 30
+retry_sleep = 5
+
+if check_taskstatus('GETTING_STOCKDATA1', ticker) == 'NotExecuted' or \
+    check_taskstatus('GETTING_STOCKDATA1', ticker) == 'Error' :
+    try :
+        get_asset_value(ticker, date_begin, date_end)
+        update_taskstatus('GETTING_STOCKDATA1', ticker, 'Completed', None)
+    except Exception as e :
+        update_taskstatus('GETTING_STOCKDATA1', ticker, 'Error', str(e))
+
+if check_taskstatus('GETTING_STOCKDATA2', ticker) ==  'NotExecuted' or \
+    check_taskstatus('GETTING_STOCKDATA2', ticker) == 'Error' :
+    try :
+        preprocess_asset_value(ticker, date_begin, date_end)
+        update_taskstatus('GETTING_STOCKDATA2', ticker, 'Completed', None)
+    except Exception as e :
+        update_taskstatus('GETTING_STOCKDATA2', ticker, 'Error', None)
+
+SQL_SELECT_PARAMETER = """SELECT H.CODE_TASK, H.EPOCH, H.BATCH_SIZE, H.LEARNING_RATE, 
+                          H.RATIO_TRAIN_SET, H.SIZE_SEQUENCE, H.SIZE_UNITS_INPUT, H.SIZE_UNITS_HIDDEN, H.SIZE_UNITS_OUTPUT
+                          FROM TB_HYPERPARAMETER H LEFT JOIN TB_MODELRESULT M ON H.CODE_TASK = M.CODE_TASK
+                          WHERE M.CODE_TASK IS NULL ORDER BY H.CODE_TASK ASC
+                          """
+
+SQL_SELECT_ASSETVALUE = """SELECT DATE_MARKET, OPEN_P, HIGH_P, LOW_P, CLOSE_P, VOLUME
+                          FROM TB_ASSETVALUE_ADJ
+                          WHERE TICKER = %s AND DATE_MARKET >= %s and DATE_MARKET <= %s 
+                          ORDER BY DATE_MARKET
+                          """
+
+SQL_INSERT_RESULT = """INSERT INTO TB_MODELRESULT
+                         (CODE_TASK, TICKER, VERSION_MODEL, DATE_B_TRAIN, DATE_E_TRAIN, DATE_B_TEST, DATE_E_TEST,
+                         LOSS, ACCURACY, MSE, DATE_UPDATE)
+                         VALUES
+                         ('%s', '%s', %s, %s, %s, %s, %s, %f, %f, %f, NOW())
+                         """
+
+with connect_mysql() as con:
+    with con.cursor() as cur:
+        cur.execute(SQL_SELECT_PARAMETER, )
+        hyperparameter_row = cur.fetchall()
+
+        cur.execute(SQL_SELECT_ASSETVALUE, (ticker, date_begin, date_end, ))
+        data_row = cur.fetchall()
+
+data_set = pd.DataFrame(data_row, columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume'])
+
+for hyperparameter_set in hyperparameter_row :
+    code_task = str(hyperparameter_set[0])
+    for _ in range(retry_count) :
+        try :
+            date_begin_test, date_end_test, date_begin_train, date_end_train, \
+                accuracy, loss, mse = build_model(data_set, hyperparameter_set)                             
+            update_taskstatus(code_task, ticker, 'Completed', None)
+            break
+            
+        except Exception as e :
+            print ('[ERROR] %s' %str(e))
+            update_taskstatus(code_task, ticker, 'Error', str(e))
+            time.sleep(retry_sleep)
+
+    with connect_mysql() as con:
+        with con.cursor() as cur:
+            try :
+                SQL_INSERT = SQL_INSERT_RESULT %(code_task,
+                                                ticker,
+                                                1,
+                                                date_begin_test,
+                                                date_end_test,
+                                                date_begin_train,
+                                                date_end_train,
+                                                loss,
+                                                accuracy,
+                                                mse
+                                                )
+                cur.execute(SQL_INSERT)
+                con.commit()
+
+            except Exception as e:
+                print (str(e))
+                            
+                                       
+
+```
