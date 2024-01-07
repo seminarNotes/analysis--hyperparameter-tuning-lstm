@@ -166,6 +166,7 @@ date_end = '2022-12-31'
 retry_count = 30
 retry_sleep = 5
 
+# 원천(source)로부터 데이터 입수
 if check_taskstatus('GETTING_STOCKDATA1', ticker) == 'NotExecuted' or \
     check_taskstatus('GETTING_STOCKDATA1', ticker) == 'Error' :
     try :
@@ -174,6 +175,7 @@ if check_taskstatus('GETTING_STOCKDATA1', ticker) == 'NotExecuted' or \
     except Exception as e :
         update_taskstatus('GETTING_STOCKDATA1', ticker, 'Error', str(e))
 
+# 입수된 데이터를 전처리
 if check_taskstatus('GETTING_STOCKDATA2', ticker) ==  'NotExecuted' or \
     check_taskstatus('GETTING_STOCKDATA2', ticker) == 'Error' :
     try :
@@ -182,18 +184,19 @@ if check_taskstatus('GETTING_STOCKDATA2', ticker) ==  'NotExecuted' or \
     except Exception as e :
         update_taskstatus('GETTING_STOCKDATA2', ticker, 'Error', None)
 
+# 하이퍼파라미터 조회 쿼리
 SQL_SELECT_PARAMETER = """SELECT H.CODE_TASK, H.EPOCH, H.BATCH_SIZE, H.LEARNING_RATE, 
                           H.RATIO_TRAIN_SET, H.SIZE_SEQUENCE, H.SIZE_UNITS_INPUT, H.SIZE_UNITS_HIDDEN, H.SIZE_UNITS_OUTPUT
                           FROM TB_HYPERPARAMETER H LEFT JOIN TB_MODELRESULT M ON H.CODE_TASK = M.CODE_TASK
                           WHERE M.CODE_TASK IS NULL ORDER BY H.CODE_TASK ASC
                           """
-
+# 시계열 데이터 조회 쿼리
 SQL_SELECT_ASSETVALUE = """SELECT DATE_MARKET, OPEN_P, HIGH_P, LOW_P, CLOSE_P, VOLUME
                           FROM TB_ASSETVALUE_ADJ
                           WHERE TICKER = %s AND DATE_MARKET >= %s and DATE_MARKET <= %s 
                           ORDER BY DATE_MARKET
                           """
-
+# 모델 결과값 저장 쿼리
 SQL_INSERT_RESULT = """INSERT INTO TB_MODELRESULT
                          (CODE_TASK, TICKER, VERSION_MODEL, DATE_B_TRAIN, DATE_E_TRAIN, DATE_B_TEST, DATE_E_TEST,
                          LOSS, ACCURACY, MSE, DATE_UPDATE)
@@ -215,6 +218,7 @@ for hyperparameter_set in hyperparameter_row :
     code_task = str(hyperparameter_set[0])
     for _ in range(retry_count) :
         try :
+            # 실행 수행 및 평가
             date_begin_test, date_end_test, date_begin_train, date_end_train, \
                 accuracy, loss, mse = build_model(data_set, hyperparameter_set)                             
             update_taskstatus(code_task, ticker, 'Completed', None)
@@ -225,6 +229,7 @@ for hyperparameter_set in hyperparameter_row :
             update_taskstatus(code_task, ticker, 'Error', str(e))
             time.sleep(retry_sleep)
 
+    # 결과값 저장
     with connect_mysql() as con:
         with con.cursor() as cur:
             try :
