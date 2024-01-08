@@ -9,6 +9,7 @@
 1. [Introduction](#1.-Introduction)
 2. [DataFlow](#2.-DataFlow)
 3. [WorkFlow](#3.-WorkFlow)
+4. [Result](#3.-Result)
 
 ## 1. Introduction 
 
@@ -252,3 +253,40 @@ for hyperparameter_set in hyperparameter_row :
                                        
 
 ```
+
+## 4. Result
+
+실행이 끝나고 나면, 테이블 TB_MODELRESULT에서 가장 예측을 훌륭한 예측을 잘한 task(best task)와 그렇지 못한 task(worst task)를 쿼리를 통해 조회할 수 있다. 아래 파이썬 코드를 통해 해당 task에 대해 모델 학습을 다시 실행하고, 예측값(pred)과 실제값(test)을 그래프로 그리면 아래 그래프를 얻는다.
+```python
+ticker = 'USD/KRW'
+    date_begin = '2013-01-01'
+    date_end = '2022-12-31'
+
+    SQL_SELECT_BESTRESULT = """SELECT CODE_TASK, EPOCH, BATCH_SIZE, LEARNING_RATE, 
+                        RATIO_TRAIN_SET, SIZE_SEQUENCE, SIZE_UNITS_INPUT, SIZE_UNITS_HIDDEN, SIZE_UNITS_OUTPUT
+                        FROM TB_HYPERPARAMETER
+                        WHERE CODE_TASK = (SELECT CODE_TASK FROM TB_MODELRESULT
+                        WHERE TICKER = %s ORDER BY MSE ASC LIMIT 1)"""
+    
+    SQL_SELECT_ASSETVALUE = """SELECT DATE_MARKET, OPEN_P, HIGH_P, LOW_P, CLOSE_P, VOLUME
+                              FROM TB_ASSETVALUE_ADJ
+                              WHERE TICKER = %s AND DATE_MARKET >= %s and DATE_MARKET <= %s 
+                              ORDER BY DATE_MARKET
+                              """
+    
+
+    with connect_mysql() as con:
+        with con.cursor() as cur:
+            cur.execute(SQL_SELECT_BESTRESULT, (ticker, ))
+            hyperparameter_row = cur.fetchall()
+
+            cur.execute(SQL_SELECT_ASSETVALUE, (ticker, date_begin, date_end, ))
+            data_row = cur.fetchall()
+
+    data_set = pd.DataFrame(data_row, columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume'])
+    hyperparameter_set = hyperparameter_row[0]
+
+    date_begin_test, date_end_test, date_begin_train, date_end_train, \
+    accuracy, loss, mse = build_model(data_set, hyperparameter_set, plot_flag = True)
+```
+![dataflow](./images/best_pred.png)
