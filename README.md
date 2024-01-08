@@ -276,7 +276,6 @@ for hyperparameter_set in hyperparameter_row :
 
 또한, 해당 코드(code_task)을 통해 hyperparamter를 로드하여, 모델을 학습하고, 예측값(pred)과 실제값(test)을 그래프로 그리면, best task(task55)와 worst task(task09)에 대한 그래프를 아래와 같다.
 
-아래 파이썬 코드를 통해 해당 task에 대해 모델 학습을 다시 실행하고, 
 ```python
 ticker = 'USD/KRW'
 date_begin = '2013-01-01'
