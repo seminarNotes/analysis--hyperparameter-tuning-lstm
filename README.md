@@ -256,7 +256,30 @@ for hyperparameter_set in hyperparameter_row :
 
 ## 4. Result
 
-실행이 끝나고 나면, 테이블 TB_MODELRESULT에서 가장 예측을 훌륭한 예측을 잘한 task(best task)와 그렇지 못한 task(worst task)를 쿼리를 통해 조회할 수 있다. 아래 파이썬 코드를 통해 해당 task에 대해 모델 학습을 다시 실행하고, 예측값(pred)과 실제값(test)을 그래프로 그리면 아래 그래프를 얻는다.
+실행이 끝나고 나면, 테이블 TB_MODELRESULT에서 가장 예측을 훌륭한 예측을 잘한 task(best task)와 그렇지 못한 task(worst task)를 쿼리를 통해 조회할 수 있다. 
+|Field|Best|Worst|
+|:--:|:--:|:--:|
+|CODE_TASK|TASK55|TASK09|
+|EPOCH|30|20|
+|BATCH_SIZE|20|10|
+|LEARNING_RATE|0.001|0.005  
+|RATIO_TRAIN_SET|0.8|0.9|
+|SIZE_SEQUENCE|50|50|
+|SIZE_UNITS_INPUT|64|50|
+|SIZE_UNITS_HIDDEN|64|64|
+|SIZE_UNITS_OUTPUT|1|1|
+|DATE_B_TRAIN|20221105|20211029|
+|DATE_E_TRAIN|20221230|20221230|
+|DATE_B_TEST|20130101|20130101|
+|DATE_E_TEST|20201104|20211028|
+|MSE|0.00223|0.00441|
+
+
+
+
+
+
+아래 파이썬 코드를 통해 해당 task에 대해 모델 학습을 다시 실행하고, 예측값(pred)과 실제값(test)을 그래프로 그리면 아래 그래프를 얻는다.
 ```python
 ticker = 'USD/KRW'
     date_begin = '2013-01-01'
